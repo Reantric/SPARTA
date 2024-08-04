@@ -1,0 +1,108 @@
+export default class SetCoverer {
+    private universeSize: number;
+    private sets: number[][];
+    private setWeights: number[];
+
+    constructor(universeSize: number, sets: number[][], setWeights: number[]) {
+        this.universeSize = universeSize;
+        this.sets = sets;
+        this.setWeights = setWeights;
+    }
+
+    public findMinSetCover(): { minSetWeight: number, selectedSets: number[][] } {
+        const { universeSize, sets, setWeights } = this;
+        const m = sets.length;
+        const n = universeSize;
+        
+        // Heuristic threshold
+        const threshold = 1e7;
+        
+        if (m * (1 << n) > threshold) {
+            return this.findMinSetCoverGreedy();
+        } else {
+            return this.findMinSetCoverDP();
+        }
+    }
+
+    public findMinSetCoverDP(): { minSetWeight: number, selectedSets: number[][] } {
+        const { universeSize, sets, setWeights } = this;
+        const m = sets.length;
+        const dp: number[] = new Array(1 << universeSize).fill(Infinity);
+        const parent: number[] = new Array(1 << universeSize).fill(-1);
+        const setUsed: number[] = new Array(1 << universeSize).fill(-1);
+        
+        dp[0] = 0;
+
+        for (let mask = 0; mask < (1 << universeSize); mask++) {
+            if (dp[mask] === Infinity) continue;
+
+            for (let i = 0; i < sets.length; i++) {
+                const s = sets[i];
+                let newMask = mask;
+                for (const element of s) {
+                    newMask |= (1 << element);
+                }
+
+                if (dp[newMask] > dp[mask] + setWeights[i]) {
+                    dp[newMask] = dp[mask] + setWeights[i];
+                    parent[newMask] = mask;
+                    setUsed[newMask] = i;
+                }
+            }
+        }
+
+        const minSetWeight = dp[(1 << universeSize) - 1];
+        let selectedSets: number[][] = [];
+        let mask = (1 << universeSize) - 1;
+
+        while (mask !== 0) {
+            const setIndex = setUsed[mask];
+            if (setIndex === -1) break;
+            selectedSets.push(sets[setIndex]);
+            mask = parent[mask];
+        }
+
+        return { minSetWeight, selectedSets };
+    }
+
+    private findMinSetCoverGreedy(): { minSetWeight: number, selectedSets: number[][] } {
+        const { universeSize, sets, setWeights } = this;
+        const covered = new Array(universeSize).fill(false);
+        let totalWeight = 0;
+        const selectedSets: number[][] = [];
+
+        while (covered.some(c => !c)) {
+            let bestSetIndex = -1;
+            let bestCostEffectiveness = Infinity;
+
+            for (let i = 0; i < sets.length; i++) {
+                const s = sets[i];
+                let uncoveredCount = 0;
+
+                for (const element of s) {
+                    if (!covered[element]) {
+                        uncoveredCount++;
+                    }
+                }
+
+                const costEffectiveness = setWeights[i] / uncoveredCount;
+
+                if (costEffectiveness < bestCostEffectiveness) {
+                    bestCostEffectiveness = costEffectiveness;
+                    bestSetIndex = i;
+                }
+            }
+
+            if (bestSetIndex === -1) break;
+
+            selectedSets.push(sets[bestSetIndex]);
+            totalWeight += setWeights[bestSetIndex];
+
+            for (const element of sets[bestSetIndex]) {
+                covered[element] = true;
+            }
+        }
+
+        return { minSetWeight: totalWeight, selectedSets };
+    }
+}

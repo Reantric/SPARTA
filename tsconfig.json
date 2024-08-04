@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "outDir": "build",
+    "removeComments": true,
+    "skipLibCheck": true,
+    "noImplicitThis": true,
+    "inlineSourceMap": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  },
+  "include": [
+    "sketch"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
