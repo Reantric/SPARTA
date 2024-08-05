@@ -1,3 +1,5 @@
+import Draggable from "../Util/Draggable.js";
+
 export enum Severity {
     NONE = 0,
     LOW = 2,
@@ -7,24 +9,22 @@ export enum Severity {
 }
 
 
-export class Node {
+export class Node extends Draggable {
     information: string;
     title: string;
-    coord: p5.Vector;
     severity: number;
     children: Node[];
     drawn: number = 0;
     selected: number = 0;
-
-    radius: number = 120;
+    selectMode: boolean = false;
 
 
     constructor(title: string, information: string, pos: p5.Vector){ 
+        super(pos, 120);
         this.title = title;
         this.information = information;
         this.coord = pos;
         this.severity = Severity.LOW;
-
         this.children = new Array<Node>();
     }
 
@@ -38,6 +38,7 @@ export class Node {
 
     public unselect(){
         this.selected--;
+        this.selected = max(this.selected,0);
         for (let child of this.children){
             child.unselect();
         }
@@ -118,6 +119,7 @@ export class Node {
       //  if (this.drawn >= 1){ // possibly undraw later?
        //     return;
      //   }
+        this.drag();
 
         for (let child of this.children){
             Node.connectNodes(this, child);
@@ -155,20 +157,30 @@ export class Node {
         this.children.push(child);
     }
 
-    public handleMouseClick(){
+    public handleMousePress(){
+        super.handleMousePress();
         if (!this.isMouseOver()){
             return;
         }
         
-        if (!this.isSelected()){
-            this.select();
-        } else
-            this.unselect();
+        if (this.selectMode){
+            if (!this.isSelected()){
+                this.select();
+            } else
+                this.unselect();
+        }
     }
-
-    private isMouseOver() {
+    
+    public isMouseOver() {
+        super.isMouseOver();
         let d = dist(mouseX-windowWidth/2,mouseY-windowHeight/2, this.coord.x, this.coord.y);
         return d < this.radius / 2;
+    }
+
+    public handleKeyPress(key: string){
+        if (key == 's'){
+            this.selectMode = !this.selectMode;
+        }
     }
 
 }

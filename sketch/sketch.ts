@@ -1,5 +1,8 @@
 import SetCoverer from "./SetCoverer/setCover.js";
 import { Node, Severity } from "./Structures/Node.js";
+import NodeManager from "./Structures/NodeManager.js";
+import Draggable from "./Util/Draggable.js";
+import { BELOW, findNodeWithMaxY } from "./Util/Methods.js";
 
 declare global {
     interface Window { 
@@ -14,8 +17,8 @@ declare global {
 
 let CWE: Node[] = new Array();
 let SbD: Node[] = new Array();
-let nodes: Node[] = new Array();
 
+const nodeManager = new NodeManager();
 
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
@@ -33,6 +36,8 @@ const setWeights = [];
 const universeNodes: Node[] = [];
 const setNodes: Node[] = [];
 
+let drag: Node;
+
 function init(){
     // Create universe nodes
     const UPSHIFT = 180;
@@ -43,7 +48,7 @@ function init(){
         //node.radius = 80;
         universeNodes.push(node);
         node.setSeverity(Severity.NONE);
-        nodes.push(node);
+        nodeManager.addNode(node);
     }
 
     // Create set nodes
@@ -54,7 +59,7 @@ function init(){
         let v = randint(1, 10);
         setWeights.push(v);
         node.setSeverity(v);
-        nodes.push(node);
+        nodeManager.addNode(node);
         setNodes.push(node);    
     }
 
@@ -66,13 +71,11 @@ function init(){
         }
     }
 
-
 }
 
 let highlightButton: p5.Element;
 let isHighlightedUnitary: boolean = false;
 function setup() {
-    console.log("Helssosss!");
     createCanvas(windowWidth, windowHeight,P2D);
     textFont('Lato');
     textAlign(CENTER);
@@ -81,7 +84,7 @@ function setup() {
     init();
 
     highlightButton = createButton('Highlight Optimal Set Cover');
-    highlightButton.position(windowWidth / 2 - 75, windowHeight - 375);
+    highlightButton.position(windowWidth / 2 - 75, BELOW(findNodeWithMaxY(setNodes)).y + windowHeight/2);
     highlightButton.style('background-color', '#007BFF');
     highlightButton.style('color', '#FFFFFF');
     highlightButton.style('border', 'none');
@@ -89,12 +92,13 @@ function setup() {
     highlightButton.style('font-size', '24px');
     highlightButton.style('border-radius', '5px');
     highlightButton.style('cursor', 'pointer');
-    highlightButton.mousePressed(() => highlightOptimalSetCover(universeSize,sets,setWeights,nodes,setNodes));
+
+    highlightButton.mousePressed(() => highlightOptimalSetCover(universeSize,sets,setWeights,nodeManager,setNodes));
 }
 
-function highlightOptimalSetCover(universeSize: number, sets: number[][], setWeights: number[], nodes: Node[], setNodes: Node[]) {
+function highlightOptimalSetCover(universeSize: number, sets: number[][], setWeights: number[], nodes: NodeManager, setNodes: Node[]) {
     if (isHighlightedUnitary){
-        for (let node of nodes){
+        for (let node of nodeManager.nodes){
             node.selected = 0;
         }
         highlightButton.html('Highlight Optimal Set Cover');
@@ -104,7 +108,7 @@ function highlightOptimalSetCover(universeSize: number, sets: number[][], setWei
         const result = setCoverer.findMinSetCover();
         
         // Deselect all nodes first
-        nodes.forEach(node => {
+        nodeManager.nodes.forEach(node => {
             node.selected = 0;
         });
 
@@ -135,37 +139,48 @@ function drawInit(){
     textAlign(CENTER);
     translate(windowWidth/2, windowHeight/2);
     background(235,21,21);
+   
+   // funny:
+    highlightButton.position(windowWidth / 2 - 75, BELOW(findNodeWithMaxY(setNodes)).y + windowHeight/2);
+
 }
 
 function draw() {
     drawInit();
-    
+
     fill(255);
-    for (let node of nodes) {
-        node.draw();
-    }
+    nodeManager.drawNodes();
     
     noStroke();
     fill(255);
     textAlign(LEFT);
     textSize(36);
-    text(infoText, -windowWidth / 2 + 40, windowHeight / 2 - 220);
+
+    let hbpos: any = highlightButton.position(); // bruh
+    let posInfoText = BELOW(createVector(- windowWidth/2 + 200,hbpos.y - windowHeight/2), 120);
+    text(infoText, posInfoText.x, posInfoText.y);
 
 }
 
+  
 function mousePressed() {
-    for (let node of nodes) {
-        node.handleMouseClick();
-    }
+    nodeManager.handleMousePress();
 }
 
-function keyPressed(){
-    //highlightOptimalSetCover(universeSize, sets, nodes, nodes.filter(node => node.title.startsWith("Set")));
+function mouseReleased() {
+    nodeManager.handleMouseRelease();
+}
+
+function keyPressed() {
+    nodeManager.handleKeyPress(key);
 }
 
 window.setup = setup;
 window.draw = draw;
 window.mousePressed = mousePressed;
+window.mouseReleased = mouseReleased;
+window.keyPressed = keyPressed;
+window.windowResized = windowResized;
 
 function randint(arg0: number, arg1: number): number {
     return Math.floor(Math.random() * (arg1 - arg0 + 1)) + arg0;
