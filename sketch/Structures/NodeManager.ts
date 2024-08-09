@@ -9,22 +9,24 @@ export default class NodeManager {
 
     addNode(node: Node) {
         this.nodes.push(node);
-    }
-
-    removeNode(node: Node) {
-        this.nodes = this.nodes.filter(n => n !== node);
+        node.setNodeManager(this);
     }
 
     drawNodes() {
-        for (let node of this.nodes) {
-            node.draw();
+        for (let i = this.nodes.length - 1; i >= 0; i--) {
+            this.nodes[i].draw();
         }
-    }
+    }    
 
     handleMousePress() {
+        let isOverANode = false;
         for (let node of this.nodes) {
-            node.handleMousePress();
+            isOverANode = node.handleMousePress();
+            if (isOverANode) {
+                break;
+            }
         }
+        return isOverANode;
     }
 
     handleMouseRelease() {
@@ -36,6 +38,17 @@ export default class NodeManager {
     handleKeyPress(key: string) {
         for (let node of this.nodes) {
             node.handleKeyPress(key);
+        }
+    }
+
+    /**
+     * Delete a node.
+     * @param {Node} node - The node to be deleted.
+     */
+    public deleteNode(node: Node) {
+        const index = this.nodes.indexOf(node);
+        if (index > -1) {
+            this.nodes.splice(index, 1);
         }
     }
 }

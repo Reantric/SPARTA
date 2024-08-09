@@ -1,0 +1,90 @@
+/* Import Google Font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+#menu {
+    width: 300px; /* Initial width */
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    flex-shrink: 0; /* Prevent shrinking */
+    overflow: auto; /* Allow scrolling if content overflows */
+    position: relative; /* For positioning the resizer */
+}
+#resizer {
+    width: 10px; /* Width of the resizer */
+    background-color: #666;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    cursor: ew-resize; /* Cursor style for horizontal resizing */
+}
+#canvas-container {
+    flex-grow: 1; /* Grow to fill the remaining space */
+    display: flex;
+}
+button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#context-menu {
+    position: absolute;
+    display: none;
+    background-color: white;
+    border: 1px solid #ccc;
+    z-index: 1000;
+}
+#context-menu ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+#context-menu li {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+#context-menu li:hover {
+    background-color: #eee;
+}
+
+/* Ensure the zoom slider is on its own line */
+.zoom-container {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+    width: 100%; /* Ensure the container takes full width */
+}
+
+/* Make the zoom label text bigger */
+.zoom-label {
+    font-size: 18px;
+    margin-bottom: 5px;
+    text-align: center; /* Center the text within the label */
+    width: 100%; /* Ensure the label takes full width */
+}
+
+/* Make the zoom slider fill the entire width of the menu */
+#zoom-slider {
+    width: 100%; /* Make slider fill the full width */
+    margin-top: 5px;
+}

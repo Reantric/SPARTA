@@ -2,20 +2,50 @@ export default class SetCoverer {
     private universeSize: number;
     private sets: number[][];
     private setWeights: number[];
+    private isUniverseCoverable: boolean;
 
     constructor(universeSize: number, sets: number[][], setWeights: number[]) {
         this.universeSize = universeSize;
         this.sets = sets;
         this.setWeights = setWeights;
+        this.isUniverseCoverable = this.checkIfUniverseCoverable();
     }
 
+    /**
+     * Checks if the entire universe can be covered by the given sets.
+     * @returns {boolean} - True if the entire universe can be covered, false otherwise.
+     */
+    private checkIfUniverseCoverable(): boolean {
+        const covered = new Array(this.universeSize).fill(false);
+
+        for (const set of this.sets) {
+            for (const element of set) {
+                covered[element] = true;
+            }
+        }
+
+        return covered.every(c => c);
+    }
+
+    /**
+     * Getter for the isUniverseCoverable property.
+     * @returns {boolean} - True if the entire universe can be covered, false otherwise.
+     */
+    public getUniverseCoverable(): boolean {
+        return this.isUniverseCoverable;
+    }
+
+    /**
+     * Finds the minimum set cover using dynamic programming or greedy approach based on heuristic.
+     * @returns {{ minSetWeight: number, selectedSets: number[][] }} - The minimum set weight and selected sets.
+     */
     public findMinSetCover(): { minSetWeight: number, selectedSets: number[][] } {
         const { universeSize, sets, setWeights } = this;
         const m = sets.length;
         const n = universeSize;
         
         // Heuristic threshold
-        const threshold = 1e7;
+        const threshold = 1e7; // Adjust the threshold as needed
         
         if (m * (1 << n) > threshold) {
             return this.findMinSetCoverGreedy();
@@ -24,6 +54,10 @@ export default class SetCoverer {
         }
     }
 
+    /**
+     * Finds the minimum set cover using dynamic programming.
+     * @returns {{ minSetWeight: number, selectedSets: number[][] }} - The minimum set weight and selected sets.
+     */
     public findMinSetCoverDP(): { minSetWeight: number, selectedSets: number[][] } {
         const { universeSize, sets, setWeights } = this;
         const m = sets.length;
@@ -65,7 +99,11 @@ export default class SetCoverer {
         return { minSetWeight, selectedSets };
     }
 
-    private findMinSetCoverGreedy(): { minSetWeight: number, selectedSets: number[][] } {
+    /**
+     * Finds the minimum set cover using a greedy approach.
+     * @returns {{ minSetWeight: number, selectedSets: number[][] }} - The minimum set weight and selected sets.
+     */
+    public findMinSetCoverGreedy(): { minSetWeight: number, selectedSets: number[][] } {
         const { universeSize, sets, setWeights } = this;
         const covered = new Array(universeSize).fill(false);
         let totalWeight = 0;

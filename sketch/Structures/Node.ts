@@ -1,4 +1,7 @@
-import Draggable from "../Util/Draggable.js";
+import Draggable from "./Draggable.js";
+import p5 from "p5";
+import { getDrawingCanvas } from "../sketch.js";
+import NodeManager from "./NodeManager.js";
 
 export enum Severity {
     NONE = 0,
@@ -17,15 +20,20 @@ export class Node extends Draggable {
     drawn: number = 0;
     selected: number = 0;
     selectMode: boolean = false;
+    nodeManager: NodeManager;
 
 
-    constructor(title: string, information: string, pos: p5.Vector){ 
-        super(pos, 120);
+    constructor(title: string, information: string, pos: p5.Vector,p: p5=getDrawingCanvas()){ 
+        super(pos, 120,p);
         this.title = title;
         this.information = information;
         this.coord = pos;
         this.severity = Severity.LOW;
         this.children = new Array<Node>();
+    }
+
+    public setNodeManager(nodeManager: NodeManager){
+        this.nodeManager = nodeManager;
     }
 
     private internalResizeNode(){
@@ -38,7 +46,7 @@ export class Node extends Draggable {
 
     public unselect(){
         this.selected--;
-        this.selected = max(this.selected,0);
+        this.selected = Math.max(this.selected,0);
         for (let child of this.children){
             child.unselect();
         }
@@ -52,14 +60,16 @@ export class Node extends Draggable {
     }
 
     private static connectNodes(Node1: Node, Node2: Node) {
-        push();
-        stroke(255, 0, 100); // cyan color
+        let p = getDrawingCanvas();
+
+        p.push();
+        p.stroke(255, 0, 100); // cyan color
 
         if (Node1.isSelected()){
-            strokeWeight(9);
-            stroke(60,100,100);
+            p.strokeWeight(9);
+            p.stroke(60,100,100);
         } else
-            strokeWeight(5);
+            p.strokeWeight(5);
 
         // Calculate the top center of Node1
         let startX = Node1.coord.x;
@@ -70,19 +80,21 @@ export class Node extends Draggable {
         let endY = Node2.coord.y;
 
         // Draw the line
-        line(startX, startY, endX, endY);
-        pop();
+        p.line(startX, startY, endX, endY);
+        p.pop();
     }
 
     private static getSeverityColor(severity: number): p5.Color {
+         let p = getDrawingCanvas();
+
         if (severity == Severity.NONE){
-            return color(0, 0, 35);
+            return p.color(0, 0, 35);
         }
-        let cyan = color(180, 66, 59);
-        let green = color(120, 66, 59);
-        let yellow = color(60, 66, 59);
-        let red = color(0, 66, 39);
-        let purple = color(270, 66, 59);
+        let cyan = p.color(180, 66, 59);
+        let green = p.color(120, 66, 59);
+        let yellow = p.color(60, 66, 59);
+        let red = p.color(0, 66, 39);
+        let purple = p.color(270, 66, 59);
         
         if (severity < Severity.LOW) {
             return cyan;
@@ -97,21 +109,25 @@ export class Node extends Draggable {
         }
     }
 
+    public getSeverity() {
+        return this.severity;
+    }
+
     public setSeverity(severity: number){
         this.severity = severity;
     }
 
     private label(){
         if (this.title.startsWith("SbD")){
-            textSize(28);
-            text(this.title, 0, -2);
-            noStroke();
-            fill(255,100,100);
-            textSize(25);
-            text(`(${this.severity})`, 0, 32);
+            this.p.textSize(28);
+            this.p.text(this.title, 0, -2);
+            this.p.noStroke();
+            this.p.fill(255,100,100);
+            this.p.textSize(25);
+            this.p.text(`(${this.severity})`, 0, 32);
         } else {   
-            textSize(32);
-            text(this.title, 0, 10); 
+            this.p.textSize(32);
+            this.p.text(this.title, 0, 10); 
         }
     }
 
@@ -129,27 +145,27 @@ export class Node extends Draggable {
             child.draw();
         }
 
-        push();
+        this.p.push();
 
-        translate(this.coord.x, this.coord.y);
-        fill(255);
+        this.p.translate(this.coord.x, this.coord.y);
+        this.p.fill(255);
 
-        stroke(Node.getSeverityColor(this.severity));
+        this.p.stroke(Node.getSeverityColor(this.severity));
 
         if (this.isSelected()){
-            strokeWeight(10);
-            stroke(300,100,100);
+            this.p.strokeWeight(10);
+            this.p.stroke(300,100,100);
         } else
-            strokeWeight(6);
+            this.p.strokeWeight(6);
 
        
-        fill(255,0,75)
-        ellipse(0, 0, this.radius, this.radius);
-        fill(0);
-        noStroke();
+        this.p.fill(255,0,75)
+        this.p.ellipse(0, 0, this.radius, this.radius);
+        this.p.fill(0);
+        this.p.noStroke();
         this.label();
 
-        pop();
+        this.p.pop();
         
     }
 
@@ -157,11 +173,11 @@ export class Node extends Draggable {
         this.children.push(child);
     }
 
-    public handleMousePress(){
-        super.handleMousePress();
+    public handleMousePress(button: string = this.p.LEFT){
         if (!this.isMouseOver()){
-            return;
+            return false;
         }
+        super.handleMousePress(button);
         
         if (this.selectMode){
             if (!this.isSelected()){
@@ -169,18 +185,51 @@ export class Node extends Draggable {
             } else
                 this.unselect();
         }
-    }
-    
-    public isMouseOver() {
-        super.isMouseOver();
-        let d = dist(mouseX-windowWidth/2,mouseY-windowHeight/2, this.coord.x, this.coord.y);
-        return d < this.radius / 2;
+        return true;
     }
 
     public handleKeyPress(key: string){
         if (key == 's'){
             this.selectMode = !this.selectMode;
         }
+    }
+
+    /**
+     * Edit the title of a node.
+     * @param {Node} node - The node to be edited.
+     */
+    public editTitle() {
+        const newTitle = prompt("Enter new title:", this.title);
+        if (newTitle) {
+            this.title = newTitle;
+        }
+    }
+
+    /**
+     * 
+     * @returns The information of the node.
+     */
+
+    public info(){
+        console.log(this.information);
+        return this.information;
+    }
+
+    /**
+     * 
+     * @param x x-coordinate of the context menu
+     * @param y y-coordinate of the context menu
+     */
+    showContextMenu(x: number, y: number) {
+        this.contextMenu.show(x, y, [
+            { label: "Edit Title", action: this.editTitle.bind(this), icon: "uil uil-edit" },
+            { label: "View information", action: this.info.bind(this), icon: "uil uil-info-circle" },
+        { 
+            label: "Delete Node", 
+            action: () => this.nodeManager.deleteNode(this), // Use an anonymous function to preserve context
+            icon: "uil uil-trash-alt" 
+        }
+        ]);
     }
 
 }
