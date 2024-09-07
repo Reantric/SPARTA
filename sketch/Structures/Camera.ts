@@ -13,6 +13,11 @@ export class Camera {
         return this.pos;
     }
 
+    public setPosition(x: number, y: number) {
+        this.pos.x = x;
+        this.pos.y = y;
+    }
+
     pan(dx: number, dy: number) {
         this.pos.x += dx;
         this.pos.y += dy;

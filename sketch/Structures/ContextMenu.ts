@@ -8,7 +8,7 @@ export class ContextMenu {
     show(x: number, y: number, options: { label: string, action: () => void, icon?: string }[]) {
         this.contextMenuElement.innerHTML = `
             <div class="content">
-                <ul class="menu">
+                <ul class="cmenu">
                     ${options.map(opt => `
                         <li class="item">
                             ${opt.icon ? `<i class="${opt.icon}"></i>` : ''}

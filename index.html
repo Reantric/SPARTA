@@ -17,8 +17,7 @@
             <label for="zoom-slider" class="zoom-label">Zoom Level</label>
             <input type="range" id="zoom-slider" min="0.5" max="2" step="0.01" value="1">
         </div>
-        <button id="add-node">Add Node</button>
-        <button id="highlight-button">Highlight Optimal Set Cover</button>
+        
     </div>
 
 
@@ -29,13 +28,15 @@
     <!-- Context Menu -->
     <div id="context-menu" class="wrapper">
         <div class="content">
-            <ul class="menu">
+            <ul class="cmenu">
                 <!-- Menu items will be dynamically inserted here -->
             </ul>
         </div>
     </div>
 
     <!-- Importing the required scripts -->
+    <script src=" https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js "></script>
+    <script src="https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="build/sketch.js" type="module"></script>
     <script src="build/WebUtil/resizer.js" type="module"></script> <!-- Include the resizer script -->

@@ -1,7 +1,8 @@
 import Draggable from "./Draggable.js";
 import p5 from "p5";
-import { getDrawingCanvas } from "../sketch.js";
+import { getDrawingCanvas, getMenu } from "../sketch.js";
 import NodeManager from "./NodeManager.js";
+
 
 export enum Severity {
     NONE = 0,
@@ -21,7 +22,7 @@ export class Node extends Draggable {
     selected: number = 0;
     selectMode: boolean = false;
     nodeManager: NodeManager;
-
+    SbD: boolean = false;
 
     constructor(title: string, information: string, pos: p5.Vector,p: p5=getDrawingCanvas()){ 
         super(pos, 120,p);
@@ -30,14 +31,33 @@ export class Node extends Draggable {
         this.coord = pos;
         this.severity = Severity.LOW;
         this.children = new Array<Node>();
+        this.internalResizeNode();
     }
 
     public setNodeManager(nodeManager: NodeManager){
         this.nodeManager = nodeManager;
     }
 
-    private internalResizeNode(){
-        
+    private internalResizeNode() {
+        this.p.textSize(32);
+        // Get the width of the text
+        const textWidth = this.p.textWidth(this.title);
+    
+        // Set a base size and adjust it based on the text width
+        const padding = 20; // Add some padding
+        this.radius = textWidth + padding;
+    
+        // Ensure the node is at least a certain size
+        const minSize = 50;
+        this.radius = Math.max(this.radius, minSize);
+    }
+
+    public setSbDStatus(){
+        this.SbD = true;
+    }
+
+    public unsetSbDStatus(){
+        this.SbD = false;
     }
 
     public isSelected(){
@@ -118,7 +138,7 @@ export class Node extends Draggable {
     }
 
     private label(){
-        if (this.title.startsWith("SbD")){
+        if (this.SbD){
             this.p.textSize(28);
             this.p.text(this.title, 0, -2);
             this.p.noStroke();
@@ -137,13 +157,22 @@ export class Node extends Draggable {
      //   }
         this.drag();
 
-        for (let child of this.children){
+        this.children = this.children.filter(child => {
+            if (child.deleted()) {
+                return false; // Exclude this child from the array
+            }
+            
             Node.connectNodes(this, child);
             this.drawn = 1;
-            if (child.drawn >= 1)
-                continue;
+            
+            if (child.drawn >= 1) {
+                return true; // Keep the child in the array
+            }
+            
             child.draw();
-        }
+            return true; // Keep the child in the array
+        });
+        
 
         this.p.push();
 
@@ -202,17 +231,50 @@ export class Node extends Draggable {
         const newTitle = prompt("Enter new title:", this.title);
         if (newTitle) {
             this.title = newTitle;
+            getMenu().updateSearchIndex(this);
+            this.internalResizeNode();
         }
     }
 
     /**
      * 
      * @returns The information of the node.
+     * TODO: This is buggy and incorrect. Needs to be fixed.
      */
+    public info() {
+        console.log(this.p.transformedMouseX, this.p.transformedMouseY, this.coord.x, this.coord.y);
+        const ephemeralWindow = document.createElement('div');
+        ephemeralWindow.id = 'ephemeral-window';
+        ephemeralWindow.innerHTML = `<strong>${this.title}</strong><br>${this.information}`;
+        
+        // Add the window to the body
+        document.body.appendChild(ephemeralWindow);
+        
+        // Position the window near the node (this.coord)
+        const posX = this.p.mouseX; // Adjust these to fit your needs
+        const posY = this.p.mouseY;
+        
+        ephemeralWindow.style.left = `${posX}px`;
+        ephemeralWindow.style.top = `${posY}px`;
+        // Show the window
+        setTimeout(() => {
+            ephemeralWindow.classList.add('show');
+        }, 10); // Slight delay to trigger the transition
+    
+        // Hide the window after ? seconds or on user click (ideally on user click?)
+        setTimeout(() => {
+            ephemeralWindow.classList.remove('show');
+            setTimeout(() => ephemeralWindow.remove(), 300); // Wait for the transition to complete before removing
+        }, 30000);
+    
+        // Optional: Close on click
+        ephemeralWindow.addEventListener('click', () => {
+            ephemeralWindow.classList.remove('show');
+            setTimeout(() => ephemeralWindow.remove(), 300);
+        });
 
-    public info(){
         console.log(this.information);
-        return this.information;
+        return this.information
     }
 
     /**
@@ -224,6 +286,7 @@ export class Node extends Draggable {
         this.contextMenu.show(x, y, [
             { label: "Edit Title", action: this.editTitle.bind(this), icon: "uil uil-edit" },
             { label: "View information", action: this.info.bind(this), icon: "uil uil-info-circle" },
+            { label: "Center on this", action: this.center.bind(this), icon: "uil uil-crosshair" },
         { 
             label: "Delete Node", 
             action: () => this.nodeManager.deleteNode(this), // Use an anonymous function to preserve context
@@ -231,5 +294,4 @@ export class Node extends Draggable {
         }
         ]);
     }
-
 }

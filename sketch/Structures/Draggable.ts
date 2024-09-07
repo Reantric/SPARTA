@@ -9,6 +9,7 @@ export default abstract class Draggable {
     offset: p5.Vector
     p: p5;
     contextMenu: ContextMenu; // New field for the context menu
+    isDeleted: boolean = false;
     static isDraggingNode: boolean = false; // New static flag to track if a node is being dragged
 
     constructor(pos: p5.Vector, radius: number, p: p5 = getDrawingCanvas()) {
@@ -89,4 +90,29 @@ export default abstract class Draggable {
     abstract showContextMenu(x: number, y: number);
     // this.contextMenu.show();
     
+    /**
+     * Mark the node as deleted.
+     */
+    public markForDeletion() {
+        this.isDeleted = true;
+    }
+
+    /**
+     * Check if the node is marked for deletion.
+     */
+    public deleted() {
+        return this.isDeleted;
+    }
+
+    public center() {
+        const camera = this.p.camera2D;
+        const zoom = camera.getScale();
+    
+        // Get the node's coordinates, adjusted by the zoom factor
+        const centerX = this.coord.x - (this.p.width / 2) / zoom;
+        const centerY = this.coord.y - (this.p.height / 2) / zoom;
+    
+        // Set the camera's position, also considering the zoom
+        camera.setPosition(-centerX * zoom, -centerY * zoom);
+    }
 }

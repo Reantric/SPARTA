@@ -46,7 +46,6 @@ export default class SetCoverer {
         
         // Heuristic threshold
         const threshold = 1e7; // Adjust the threshold as needed
-        
         if (m * (1 << n) > threshold) {
             return this.findMinSetCoverGreedy();
         } else {

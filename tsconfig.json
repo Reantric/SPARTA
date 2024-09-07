@@ -8,11 +8,15 @@
     "skipLibCheck": true,
     "noImplicitThis": true,
     "inlineSourceMap": true,
+    "allowSyntheticDefaultImports" : true,
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "lib": ["dom", "esnext"],
+    "resolveJsonModule": true
   },
   "include": [
-    "sketch"
+    "sketch",
+    "global.d.ts" // Ensure global.d.ts is included
   ],
   "exclude": [
     "node_modules"

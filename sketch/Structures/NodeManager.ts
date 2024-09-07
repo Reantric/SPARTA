@@ -1,4 +1,5 @@
-import { Node } from "./Node";
+import { getMenu } from "../sketch.js";
+import { Node } from "./Node.js";
 
 export default class NodeManager {
     nodes: Node[];
@@ -45,9 +46,11 @@ export default class NodeManager {
      * Delete a node.
      * @param {Node} node - The node to be deleted.
      */
-    public deleteNode(node: Node) {
+    public deleteNode(node: Node) { // Bug when deleting child, because it doesn't delete it from the parent's children array.
         const index = this.nodes.indexOf(node);
         if (index > -1) {
+            node.markForDeletion();
+            getMenu().removeFromSearchIndex(node);
             this.nodes.splice(index, 1);
         }
     }
