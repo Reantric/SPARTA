@@ -8,7 +8,10 @@ Website/app to help visualise and understand the most resource efficient way to 
 weakness enumerations. 
 * Utilizes a weighted set-cover algorithm to efficiently solve and approximate the problem, ensuring optimal or near-optimal solutions ($\Omega(\log n)$ approximation ratio).
 
+
 ![preview](https://github.com/user-attachments/assets/69ae57b0-1d76-4334-a115-ecd4aac4b93d)
+
+![preview2](https://github.com/user-attachments/assets/dc3d16a4-8a29-419e-ac7d-ab9ca10ead91)
 
 ## Getting Started
 
