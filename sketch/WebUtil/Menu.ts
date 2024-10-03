@@ -1,5 +1,5 @@
 import NodeManager from "../Structures/NodeManager.js";
-import { Node } from "../Structures/Node.js";
+import { Node, Severity } from "../Structures/Node.js";
 import { getDrawingCanvas } from "../sketch.js";
 import SetCoverer from "../SetCoverer/setCover.js";
 
@@ -19,9 +19,9 @@ export class Menu {
     /**
      * Set Coverer stuff. 
      */
-    private universeSize: number;
-    private sets: number[][];
-    private setWeights: number[];
+ //   private universeSize: number;
+ //   private sets: number[][];
+  //  private setWeights: number[];
     private nodeManager: NodeManager;
     private setNodes: Node[];
     private isHighlightedUnitary: boolean = false;
@@ -40,9 +40,9 @@ export class Menu {
     private searchResults: Node[] = [];
 
     constructor(universeSize: number, sets: number[][], setWeights: number[], nodes: NodeManager, setNodes: Node[], p: p5 = getDrawingCanvas()) {
-        this.universeSize = universeSize;
-        this.sets = sets;
-        this.setWeights = setWeights;
+    //    this.universeSize = universeSize;
+     //   this.sets = sets;
+     //   this.setWeights = setWeights;
         this.nodeManager = nodes;
         this.setNodes = setNodes;
         this.p = p;
@@ -64,6 +64,216 @@ export class Menu {
     }
 
     /**
+     * Adds a node to the canvas.
+     */
+    public addNode() {
+        // Create a modal form for node input
+        const modal = document.createElement('div');
+        modal.id = 'add-node-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '1000';
+
+        const form = document.createElement('div');
+        form.style.backgroundColor = '#fff';
+        form.style.padding = '20px';
+        form.style.borderRadius = '5px';
+        form.style.width = '400px';
+        form.style.boxSizing = 'border-box';
+
+        // Form Title
+        const formTitle = document.createElement('h2');
+        formTitle.textContent = 'Add New Node';
+        formTitle.style.marginTop = '0';
+        form.appendChild(formTitle);
+
+        // Node Type Selection
+        const typeLabel = document.createElement('label');
+        typeLabel.textContent = 'Node Type:';
+        typeLabel.style.display = 'block';
+        typeLabel.style.marginBottom = '5px';
+        form.appendChild(typeLabel);
+
+        const typeSelect = document.createElement('select');
+        typeSelect.style.width = '100%';
+        typeSelect.style.padding = '8px';
+        typeSelect.style.marginBottom = '15px';
+        typeSelect.style.fontSize = '16px';
+        typeSelect.style.border = '1px solid #ccc';
+        typeSelect.style.borderRadius = '5px';
+
+        const optionCWE = document.createElement('option');
+        optionCWE.value = 'CWE';
+        optionCWE.textContent = 'CWE';
+        typeSelect.appendChild(optionCWE);
+
+        const optionSbD = document.createElement('option');
+        optionSbD.value = 'SbD';
+        optionSbD.textContent = 'SbD';
+        typeSelect.appendChild(optionSbD);
+
+        form.appendChild(typeSelect);
+
+        // Title Input
+        const titleLabel = document.createElement('label');
+        titleLabel.textContent = 'Title:';
+        titleLabel.style.display = 'block';
+        titleLabel.style.marginBottom = '5px';
+        form.appendChild(titleLabel);
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.style.width = '100%';
+        titleInput.style.padding = '8px';
+        titleInput.style.marginBottom = '15px';
+        titleInput.style.fontSize = '16px';
+        titleInput.style.border = '1px solid #ccc';
+        titleInput.style.borderRadius = '5px';
+        form.appendChild(titleInput);
+
+        // Information Input
+        const infoLabel = document.createElement('label');
+        infoLabel.textContent = 'Information:';
+        infoLabel.style.display = 'block';
+        infoLabel.style.marginBottom = '5px';
+        form.appendChild(infoLabel);
+
+        const infoInput = document.createElement('textarea');
+        infoInput.style.width = '100%';
+        infoInput.style.padding = '8px';
+        infoInput.style.marginBottom = '15px';
+        infoInput.style.fontSize = '16px';
+        infoInput.style.border = '1px solid #ccc';
+        infoInput.style.borderRadius = '5px';
+        infoInput.rows = 4;
+        form.appendChild(infoInput);
+
+        // Severity Input (Optional, only for SbD)
+        const severityLabel = document.createElement('label');
+        severityLabel.textContent = 'Severity (Optional, for SbD):';
+        severityLabel.style.display = 'block';
+        severityLabel.style.marginBottom = '5px';
+        severityLabel.style.display = 'none'; // Hidden by default
+        form.appendChild(severityLabel);
+
+        const severitySelect = document.createElement('select');
+        severitySelect.style.width = '100%';
+        severitySelect.style.padding = '8px';
+        severitySelect.style.marginBottom = '15px';
+        severitySelect.style.fontSize = '16px';
+        severitySelect.style.border = '1px solid #ccc';
+        severitySelect.style.borderRadius = '5px';
+        severitySelect.style.display = 'none'; // Hidden by default
+
+        const severities = [
+            { value: Severity.NONE, label: 'None' },
+            { value: Severity.LOW, label: 'Low' },
+            { value: Severity.MEDIUM, label: 'Medium' },
+            { value: Severity.HIGH, label: 'High' },
+            { value: Severity.CRITICAL, label: 'Critical' }
+        ];
+
+        severities.forEach(sev => {
+            const option = document.createElement('option');
+            option.value = sev.value.toString();
+            option.textContent = sev.label;
+            severitySelect.appendChild(option);
+        });
+
+        form.appendChild(severitySelect);
+
+        // Show/Hide Severity based on Node Type
+        typeSelect.addEventListener('change', () => {
+            if (typeSelect.value === 'SbD') {
+                severityLabel.style.display = 'block';
+                severitySelect.style.display = 'block';
+            } else {
+                severityLabel.style.display = 'none';
+                severitySelect.style.display = 'none';
+            }
+        });
+
+        // Submit Button
+        const submitButton = document.createElement('button');
+        submitButton.textContent = 'Add Node';
+        submitButton.style.width = '100%';
+        submitButton.style.padding = '10px';
+        submitButton.style.marginBottom = '10px';
+        submitButton.style.fontSize = '16px';
+        submitButton.style.backgroundColor = '#28a745';
+        submitButton.style.color = '#fff';
+        submitButton.style.border = 'none';
+        submitButton.style.borderRadius = '5px';
+        submitButton.style.cursor = 'pointer';
+        form.appendChild(submitButton);
+
+        // Cancel Button
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.style.width = '100%';
+        cancelButton.style.padding = '10px';
+        cancelButton.style.fontSize = '16px';
+        cancelButton.style.backgroundColor = '#dc3545';
+        cancelButton.style.color = '#fff';
+        cancelButton.style.border = 'none';
+        cancelButton.style.borderRadius = '5px';
+        cancelButton.style.cursor = 'pointer';
+        form.appendChild(cancelButton);
+
+        // Append form to modal
+        modal.appendChild(form);
+
+        // Append modal to body
+        document.body.appendChild(modal);
+
+        // Handle form submission
+        submitButton.addEventListener('click', () => {
+            const nodeType = typeSelect.value;
+            const title = titleInput.value.trim();
+            const information = infoInput.value.trim();
+            const severityValue = parseInt(severitySelect.value);
+
+            if (!title) {
+                alert('Title is required.');
+                return;
+            }
+
+            // Create the new node
+            const p = getDrawingCanvas();
+            const position = p.createVector(p.width / 2, p.height / 2); // Center of the canvas
+            const newNode = new Node(title, information, position, p);
+
+            if (nodeType === 'SbD') {
+                newNode.setSbDStatus();
+                newNode.setSeverity(severityValue || Severity.LOW); // Default to LOW if not specified
+                this.setNodes.push(newNode); // Add to setNodes for set cover calculations
+            }
+
+            // Add the node to the NodeManager
+            this.nodeManager.addNode(newNode);
+
+            // Index the new node for search
+            this.searchIndex.add(this.nodeManager.nodes.indexOf(newNode), `${newNode.title} ${newNode.information}`);
+
+            // Remove the modal
+            document.body.removeChild(modal);
+        });
+
+        // Handle cancel action
+        cancelButton.addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+    }
+
+
+    /**
      * Initializes the menu.
      */
     private initMenu(){
@@ -75,7 +285,7 @@ export class Menu {
         // Add Add Node Button
         this.addButton("Add Node", () => {
             // Implement the action for adding a node
-            console.log("Add Node button clicked");
+            this.addNode();
         }, "add-node", menuElement);
 
         // Add Highlight Optimal Set Cover Button
@@ -218,37 +428,146 @@ export class Menu {
      */
     public highlightOptimalSetCover(highlightButton: p5.Element) {
         if (this.isHighlightedUnitary) {
+            // Deselect all nodes and reset the button text
             this.nodeManager.nodes.forEach(node => node.selected = 0);
+            this.nodeManager.selectedNodes.clear();
             highlightButton.html('Highlight Optimal Set Cover');
             this.staticInfoText = '';
         } else {
-            const setCoverer = new SetCoverer(this.universeSize, this.sets, this.setWeights);
+            // Get the selected CWEs (or all CWEs if none are selected)
+            let CWEs = this.nodeManager.getCWESelection();
+            
+            // Calculate the universe (CWE identifiers) dynamically
+            const universe = CWEs.map(node => node.title);
+    
+            // Calculate universeSize (distinct CWEs)
+            const universeSize = universe.length;
+    
+            // Create a map from CWE title to its index in the universe
+            const CWEToIndex = Object.fromEntries(universe.map((cwe, index) => [cwe, index]));
+    
+            // Filter out setNodes that are deleted from `this.setNodes`
+            this.setNodes = this.setNodes.filter(setNode => !setNode.deleted());
+            
+            // Calculate sets (CWEs mitigated by each SbD), only include non-deleted and non-hidden SbDs
+            const sets = this.setNodes
+                .filter(setNode => !setNode.deleted() && !setNode.isHidden())
+                .map(setNode => {
+                    return setNode.children
+                        .map(childNode => CWEToIndex[childNode.title])
+                        .filter(index => index !== undefined); // Filter out any undefined values
+                });
+    
+            // Calculate setWeights (severity for each SbD node)
+            const setWeights = this.setNodes
+                .filter(setNode => !setNode.deleted() && !setNode.isHidden())
+                .map(setNode => setNode.getSeverity());
+    
+            // Initialize SetCoverer with the dynamically calculated sets and universe size
+            const setCoverer = new SetCoverer(universeSize, sets, setWeights);
             let result;
-
+    
             if (setCoverer.getUniverseCoverable()) {
                 result = setCoverer.findMinSetCover();
             } else {
                 result = setCoverer.findMinSetCoverGreedy();
             }
-            
+    
             // Deselect all nodes first
             this.nodeManager.nodes.forEach(node => node.selected = 0);
-
+    
             // Highlight the optimal set cover
             result.selectedSets.forEach(set => {
-                const setIndex = this.sets.indexOf(set);
+                const setIndex = sets.findIndex(s => JSON.stringify(s) === JSON.stringify(set));
                 if (setIndex !== -1) {
-                    this.setNodes[setIndex].select();
+                    const nonHiddenSetNodes = this.setNodes.filter(setNode => !setNode.deleted() && !setNode.isHidden());
+                    nonHiddenSetNodes[setIndex].select();
                 }
             });
+    
+            // Now look at the complement of selected CWEs
+            const coveredCWEIndices = new Set<number>();
+            result.selectedSets.forEach(set => {
+                set.forEach(cweIndex => coveredCWEIndices.add(cweIndex));
+            });
+    
+            // Compute complement of covered CWEs with respect to the universe
+            const complementCWEIndices = [];
+            for (let i = 0; i < universeSize; i++) {
+                if (!coveredCWEIndices.has(i)) {
+                    complementCWEIndices.push(i);
+                }
+            }
+    
+            if (complementCWEIndices.length > 0) {
+                // There are CWEs not covered by the first set cover
+                // Proceed to run second set cover with hidden SbDs
+    
+                // Get the hidden SbD nodes
+                const hiddenSetNodes = this.setNodes.filter(setNode => !setNode.deleted() && setNode.isHidden());
+    
+                const complementCWEIndexSet = new Set(complementCWEIndices);
+    
+                // Create mapping from old CWE indices to new indices
+                const oldIndexToNewIndex = {};
+                complementCWEIndices.forEach((oldIndex, newIndex) => {
+                    oldIndexToNewIndex[oldIndex] = newIndex;
+                });
+    
+                const complementUniverseSize = complementCWEIndices.length;
+    
+                // Create adjustedHiddenSets
+                const hiddenSets = hiddenSetNodes.map(setNode => {
+                    return setNode.children
+                        .map(childNode => CWEToIndex[childNode.title])
+                        .filter(index => index !== undefined && complementCWEIndexSet.has(index));
+                });
+    
+                // Adjust indices in hiddenSets to new indices
+                const adjustedHiddenSets = hiddenSets.map(set => {
+                    return set.map(oldIndex => oldIndexToNewIndex[oldIndex]);
+                });
+    
+                // Calculate setWeights for hidden nodes
+                const hiddenSetWeights = hiddenSetNodes.map(setNode => setNode.getSeverity());
+    
+                // Initialize SetCoverer for complement universe
+                const complementSetCoverer = new SetCoverer(complementUniverseSize, adjustedHiddenSets, hiddenSetWeights);
+    
+                let complementResult;
+                if (complementSetCoverer.getUniverseCoverable()) {
+                    complementResult = complementSetCoverer.findMinSetCover();
+                } else {
+                    complementResult = complementSetCoverer.findMinSetCoverGreedy();
+                }
+    
+                // Highlight the selected hidden set nodes
+                const setToIndexMap = new Map();
+                adjustedHiddenSets.forEach((set, index) => {
+                    setToIndexMap.set(JSON.stringify(set), index);
+                });
+    
+                complementResult.selectedSets.forEach(set => {
+                    const setIndex = setToIndexMap.get(JSON.stringify(set));
+                    if (setIndex !== undefined) {
+                        hiddenSetNodes[setIndex].select();
+                    }
+                });
+    
+                // Optionally, display the results for the second set cover
+                const complementMinSetCount = complementResult.selectedSets.length;
+                const complementMinWeight = complementResult.minSetWeight;
+            }
+    
+            // Update button text and display the results
             highlightButton.html('Unhighlight Optimal Set Cover');
-
             const minSetCount = result.selectedSets.length;
             const minWeight = result.minSetWeight;
             this.displayInfo(minSetCount, minWeight, setCoverer.getUniverseCoverable());
         }
         this.isHighlightedUnitary = !this.isHighlightedUnitary;
     }
+    
 
     /**
      * Displays information about the minimum set cover.

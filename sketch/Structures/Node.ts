@@ -23,6 +23,7 @@ export class Node extends Draggable {
     selectMode: boolean = false;
     nodeManager: NodeManager;
     SbD: boolean = false;
+    hidden: boolean = false; 
 
     constructor(title: string, information: string, pos: p5.Vector,p: p5=getDrawingCanvas()){ 
         super(pos, 120,p);
@@ -67,6 +68,8 @@ export class Node extends Draggable {
     public unselect(){
         this.selected--;
         this.selected = Math.max(this.selected,0);
+        if (this.selected == 0)
+            this.nodeManager.unselectNode(this);
         for (let child of this.children){
             child.unselect();
         }
@@ -74,6 +77,7 @@ export class Node extends Draggable {
 
     public select(){
         this.selected++;
+        this.nodeManager.selectNode(this);
         for (let child of this.children){
             child.select();
         }
@@ -155,6 +159,7 @@ export class Node extends Draggable {
       //  if (this.drawn >= 1){ // possibly undraw later?
        //     return;
      //   }
+        
         this.drag();
 
         this.children = this.children.filter(child => {
@@ -162,7 +167,8 @@ export class Node extends Draggable {
                 return false; // Exclude this child from the array
             }
             
-            Node.connectNodes(this, child);
+            if (!this.hidden)
+                Node.connectNodes(this, child);
             this.drawn = 1;
             
             if (child.drawn >= 1) {
@@ -172,23 +178,41 @@ export class Node extends Draggable {
             child.draw();
             return true; // Keep the child in the array
         });
+
+        if (this.nodeManager.currentParentNode == this && this.nodeManager.isAddingChild && this.nodeManager.currentChildLine) {
+            this.p.push();
+            this.p.stroke(120, 255, 255); // Green line
+            this.p.strokeWeight(this.isSelected() ? 9 : 5);
+            this.p.line(this.nodeManager.currentChildLine.startX, this.nodeManager.currentChildLine.startY, this.p.transformedMouseX, this.p.transformedMouseY);
+            this.p.pop();
+        }
         
 
         this.p.push();
 
         this.p.translate(this.coord.x, this.coord.y);
-        this.p.fill(255);
 
-        this.p.stroke(Node.getSeverityColor(this.severity));
+        if (this.isHidden()) {
+            this.p.fill(255,0,32,20);
+            let col = Node.getSeverityColor(this.severity);
+            col.setAlpha(0);
+            this.p.stroke(col);
+        } else {
+            this.p.fill(255,0,75)
+            this.p.stroke(Node.getSeverityColor(this.severity));
+        }
 
         if (this.isSelected()){
             this.p.strokeWeight(10);
-            this.p.stroke(300,100,100);
+            if (this.hidden)
+                this.p.stroke(200,100,100);
+            else
+                this.p.stroke(300,100,100);
         } else
             this.p.strokeWeight(6);
 
        
-        this.p.fill(255,0,75)
+        
         this.p.ellipse(0, 0, this.radius, this.radius);
         this.p.fill(0);
         this.p.noStroke();
@@ -207,6 +231,17 @@ export class Node extends Draggable {
             return false;
         }
         super.handleMousePress(button);
+
+        if (this.nodeManager.isAddingChild) {
+            if (!this.SbD && !this.nodeManager.currentParentNode.children.includes(this)) {
+                // Connect this node as a child
+                this.nodeManager.currentParentNode.addChild(this);
+                this.nodeManager.isAddingChild = false;
+                this.nodeManager.currentChildLine = null;  // Reset the line
+                this.nodeManager.currentParentNode = null; // Reset the parent
+            }
+            return true;
+        }
         
         if (this.selectMode){
             if (!this.isSelected()){
@@ -278,6 +313,28 @@ export class Node extends Draggable {
     }
 
     /**
+     * Draw a line from the node to the cursor until a child is added.
+     */
+    startAddingChild() { // Maybe this is better as a method in NodeManager?
+        this.nodeManager.isAddingChild = true;
+        this.nodeManager.currentChildLine = { startX: this.coord.x, startY: this.coord.y };
+        this.nodeManager.currentParentNode = this;
+    }
+
+    public hideNode() {
+        this.hidden = true;
+    }
+
+    // New method to show the node
+    public showNode() {
+        this.hidden = false;
+    }
+    
+    public isHidden() {
+        return this.hidden;
+    }
+
+    /**
      * 
      * @param x x-coordinate of the context menu
      * @param y y-coordinate of the context menu
@@ -291,6 +348,16 @@ export class Node extends Draggable {
             label: "Delete Node", 
             action: () => this.nodeManager.deleteNode(this), // Use an anonymous function to preserve context
             icon: "uil uil-trash-alt" 
+        },
+        {
+            label: this.hidden ? "Show" : "Hide",
+            action: this.hidden ? this.showNode.bind(this) : this.hideNode.bind(this),
+            icon: this.hidden ? "uil uil-eye" : "uil uil-eye-slash"
+        },
+        {
+            label: "Add Child", 
+            action: this.startAddingChild.bind(this),  // Call a function to start adding a child
+            icon: "uil uil-plus-circle"
         }
         ]);
     }

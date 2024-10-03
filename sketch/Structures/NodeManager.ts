@@ -3,14 +3,62 @@ import { Node } from "./Node.js";
 
 export default class NodeManager {
     nodes: Node[];
+    selectedNodes: Set<Node>;
+    currentParentNode: Node;
+    public isAddingChild: boolean = false;
+    public currentChildLine: { startX: number, startY: number } | null = null;
 
     constructor() {
         this.nodes = [];
+        this.selectedNodes = new Set<Node>();
     }
 
     addNode(node: Node) {
         this.nodes.push(node);
         node.setNodeManager(this);
+    }
+
+    // Track selection of non-SbD nodes
+    selectNode(node: Node) {
+        if (!node.SbD) {
+            this.selectedNodes.add(node);
+        }
+    }
+
+    // Track deselection of non-SbD nodes
+    unselectNode(node: Node) {
+        if (!node.SbD) {
+            this.selectedNodes.delete(node);
+        }
+    }
+
+    // Get selected CWEs
+    public getSelectedCWEs(): Node[] {
+        return Array.from(this.selectedNodes);
+    }
+
+    // Get selected SbDs (if needed)
+    public getSelectedSbDs(): Node[] {
+        return this.nodes.filter(node => node.SbD && node.isSelected());
+    }
+
+    // Get all CWEs
+    public getAllCWEs(): Node[] {
+        return this.nodes.filter(node => !node.SbD);
+    }
+
+    // Get all SbDs
+    public getAllSbDs(): Node[] {
+        return this.nodes.filter(node => node.SbD);
+    }
+
+    // Determine if we should apply the set cover on all nodes or just selected nodes
+    getCWESelection() {
+        if (this.selectedNodes.size > 0) {
+            return Array.from(this.selectedNodes); // If nodes are selected, return only those
+        } else {
+            return this.nodes.filter(node => !node.SbD); // Otherwise, return all non-SbD nodes
+        }
     }
 
     /*
@@ -94,7 +142,7 @@ export default class NodeManager {
      * Delete a node.
      * @param {Node} node - The node to be deleted.
      */
-    public deleteNode(node: Node) { // Bug when deleting child, because it doesn't delete it from the parent's children array.
+    public deleteNode(node: Node) { 
         const index = this.nodes.indexOf(node);
         if (index > -1) {
             node.markForDeletion();

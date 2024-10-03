@@ -11,6 +11,7 @@ export default class SetCoverer {
         this.isUniverseCoverable = this.checkIfUniverseCoverable();
     }
 
+
     /**
      * Checks if the entire universe can be covered by the given sets.
      * @returns {boolean} - True if the entire universe can be covered, false otherwise.
@@ -60,12 +61,12 @@ export default class SetCoverer {
     public findMinSetCoverDP(): { minSetWeight: number, selectedSets: number[][] } {
         const { universeSize, sets, setWeights } = this;
         const m = sets.length;
-        const dp: number[] = new Array(1 << universeSize).fill(Infinity);
+        const dp: number[] = new Array(1 << universeSize).fill(Infinity); // dp[mask] = minimum weight to cover the elements at positions represented by mask
         const parent: number[] = new Array(1 << universeSize).fill(-1);
         const setUsed: number[] = new Array(1 << universeSize).fill(-1);
-        
-        dp[0] = 0;
 
+        dp[0] = 0;
+            
         for (let mask = 0; mask < (1 << universeSize); mask++) {
             if (dp[mask] === Infinity) continue;
 
@@ -76,7 +77,7 @@ export default class SetCoverer {
                     newMask |= (1 << element);
                 }
 
-                if (dp[newMask] > dp[mask] + setWeights[i]) {
+                if (dp[newMask] > dp[mask] + setWeights[i]) { // This selection is better
                     dp[newMask] = dp[mask] + setWeights[i];
                     parent[newMask] = mask;
                     setUsed[newMask] = i;
